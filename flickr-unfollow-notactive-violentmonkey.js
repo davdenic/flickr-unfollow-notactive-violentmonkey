@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Automatically Unfollow Flickr not-following and not-active
 // @namespace   Violentmonkey Scripts
-// @include *.flickr.com/people/*/contacts/
+// @include 	*.flickr.com/people/*/contacts/
 // @match       *://*/*
 // @grant       none
 // @version     1.0
