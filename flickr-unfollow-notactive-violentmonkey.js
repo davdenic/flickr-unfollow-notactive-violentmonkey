@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Automatically Unfollow Flickr not-following and not-active
 // @namespace   Violentmonkey Scripts
-// @include 	*.flickr.com/people/*/contacts/
+// @include *.flickr.com/people/*/contacts/
 // @match       *://*/*
 // @grant       none
 // @version     1.0
@@ -10,7 +10,7 @@
 // ==/UserScript==
 
 var config = {
-    "unfollow": 'non-reciprocal', // 'all' or 'non-reciprocal'
+    "unfollowNonReciprocal": true, // true, false
     "protect": ['friend','family'], // 'friend' or 'family'
     "addedOn": ['months','ages'], // 'weeks', 'months', 'ages'
     "anyAddedTime": false, // true, false
@@ -55,7 +55,6 @@ function addEvent()
                 var $this = $(this);
                 setTimeout(function () {
                     $this.click();
-//                    console.log('click' , i);
                 }, (i * 2000));
 
                 console.log(i, $notFollowing.length - 1);
@@ -111,7 +110,7 @@ function addEvent()
                     $(thisIcon).parents('tr').addClass('not-following');
                     console.log('zero found');
                     continue;
-                } 
+                }
                 if (thislastUp.includes('ages')) {
                     // mark to unfollow if last upload is ages ago
                     $(thisIcon).parents('tr').addClass('not-following');
@@ -124,95 +123,97 @@ function addEvent()
                     console.log(parseInt(thisLastUpNum, 10), config.lastUpload[1], 'found');
                     continue;
                 }
-              
-                // and then it search who is not a reciprocal follower
-                var listener = {
-                    flickr_people_getInfo_onLoad: function (success, responseXML, responseText, params) {
-                        if (success) {
-                            var rsp = responseText.replace(/jsonFlickrApi\(/,'');
-                            rsp = eval('(' + rsp);
-                            if (rsp.stat == 'ok') {
-                                if (
-                                    rsp.person.revcontact == 0 &&
-                                    rsp.person.revfriend == 0 &&
-                                    rsp.person.revfamily == 0
-                                ) {
-                                    snapUnames = document.evaluate(
-                                        "//td[@class='contact-list-name']/a/text()",
-                                        document,
-                                        null,
-                                        XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE,
-                                        null
-                                    );
 
-                                    if (snapUnames.snapshotLength == 0) {
+                // and then it search who is not a reciprocal follower
+                if (config.unfollowNonReciprocal) {
+                    var listener = {
+                        flickr_people_getInfo_onLoad: function (success, responseXML, responseText, params) {
+                            if (success) {
+                                var rsp = responseText.replace(/jsonFlickrApi\(/,'');
+                                rsp = eval('(' + rsp);
+                                if (rsp.stat == 'ok') {
+                                    if (
+                                        rsp.person.revcontact == 0 &&
+                                        rsp.person.revfriend == 0 &&
+                                        rsp.person.revfamily == 0
+                                    ) {
                                         snapUnames = document.evaluate(
-                                            "//td[@class='contact-list-name contact-list-sorted']/a/text()",
+                                            "//td[@class='contact-list-name']/a/text()",
                                             document,
                                             null,
                                             XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE,
                                             null
                                         );
-                                    }
-                                    //console.log(snapUnames);
-                                    for (j = 0; j < snapUnames.snapshotLength; j++) {
-                                        if ( snapUnames.snapshotItem(j).nodeValue == rsp.person.username._content || config.unfollow == 'all' ) {
-                                            var contactType = $(snapUnames.snapshotItem(j)).parents('tr').find('.contact-list-youthem span').eq(0).text();
-                                            contactType = contactType.toLowerCase();
-                                            var addedOn = $(snapUnames.snapshotItem(j)).parents('tr').find('.contact-list-added').text();
 
-                                            //console.log(lastUpload);
+                                        if (snapUnames.snapshotLength == 0) {
+                                            snapUnames = document.evaluate(
+                                                "//td[@class='contact-list-name contact-list-sorted']/a/text()",
+                                                document,
+                                                null,
+                                                XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE,
+                                                null
+                                            );
+                                        }
+                                        //console.log(snapUnames);
+                                        for (j = 0; j < snapUnames.snapshotLength; j++) {
+                                            if (snapUnames.snapshotItem(j).nodeValue == rsp.person.username._content) {
+                                                var contactType = $(snapUnames.snapshotItem(j)).parents('tr').find('.contact-list-youthem span').eq(0).text();
+                                                contactType = contactType.toLowerCase();
+                                                var addedOn = $(snapUnames.snapshotItem(j)).parents('tr').find('.contact-list-added').text();
 
-                                            var protect = false;
-                                            for (i = 0; i < config.protect.length; i++) {
-                                                if ( contactType.includes(config.protect[i]) ) {
-                                                    protect = true;
-                                                    break;
-                                                }
-                                            }//end loop to check contact type
+                                                //console.log(lastUpload);
 
-                                            if (!protect) {
-                                                //console.log('not protected');
-                                                if (config.anyAddedTime === true ) {
-                                                    //console.log('anyAddedTime is true');
-                                                    snapUnames.snapshotItem(j).parentNode.style.color = 'red';
-                                                    $(snapUnames.snapshotItem(j)).parents('tr').addClass('not-following');
-                                                } else {
-                                                    for (i = 0; i < config.addedOn.length; i++) {
-                                                        if (addedOn.includes(config.addedOn[i]) ) {
-                                                            // mark to unfollow and red if added time ago
-                                                            snapUnames.snapshotItem(j).parentNode.style.color = 'red';
-                                                            $(snapUnames.snapshotItem(j)).parents('tr').addClass('not-following');
-                                                            break;
-                                                        } else {
-                                                            //orange added recently
-                                                            snapUnames.snapshotItem(j).parentNode.style.color = 'orange';
-                                                        }
-                                                    }//end for loop check addedOn
-                                                }//end protect else
-                                            }//end if !protect
+                                                var protect = false;
+                                                for (i = 0; i < config.protect.length; i++) {
+                                                    if ( contactType.includes(config.protect[i]) ) {
+                                                        protect = true;
+                                                        break;
+                                                    }
+                                                }//end loop to check contact type
+
+                                                if (!protect) {
+                                                    //console.log('not protected');
+                                                    if (config.anyAddedTime === true ) {
+                                                        //console.log('anyAddedTime is true');
+                                                        snapUnames.snapshotItem(j).parentNode.style.color = 'red';
+                                                        $(snapUnames.snapshotItem(j)).parents('tr').addClass('not-following');
+                                                    } else {
+                                                        for (i = 0; i < config.addedOn.length; i++) {
+                                                            if (addedOn.includes(config.addedOn[i]) ) {
+                                                                // mark to unfollow and red if added time ago
+                                                                snapUnames.snapshotItem(j).parentNode.style.color = 'red';
+                                                                $(snapUnames.snapshotItem(j)).parents('tr').addClass('not-following');
+                                                                break;
+                                                            } else {
+                                                                //orange added recently
+                                                                snapUnames.snapshotItem(j).parentNode.style.color = 'orange';
+                                                            }
+                                                        }//end for loop check addedOn
+                                                    }//end protect else
+                                                }//end if !protect
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
-                    }
-                };
-                var f = function () {
-                    try {
-                        unsafeWindow.F.API.callMethod(
-                            'flickr.people.getInfo',
-                            {
-                                user_id: matches[1],
-                                format: 'json'
-                            },
-                            listener
-                        );
-                    } catch (err) {
-                        setTimeout(f, 1000);
-                    }
-                };
-                f();
+                    };
+                    var f = function () {
+                        try {
+                            unsafeWindow.F.API.callMethod(
+                                'flickr.people.getInfo',
+                                {
+                                    user_id: matches[1],
+                                    format: 'json'
+                                },
+                                listener
+                            );
+                        } catch (err) {
+                            setTimeout(f, 1000);
+                        }
+                    };
+                    f();
+                }
             }
         }
     })()

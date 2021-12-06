@@ -2,7 +2,9 @@
 ## tested on firefox v94.0.2 (macos), Violentmonkey v2.13.0
 
 ## Why this script
-The reason is clearly that you can start following someone but he can be not-active or someone who deleted his/her/its photos or make them private. And after giving a reasonable amont of time also removes not reciprocal follower.
+The reason is clearly that you can start following someone but he can be not-active or someone who deleted his/her/its photos or make them private. 
+Flickr changed ownership twice since I've started using it and I collected something around 9k contacts, some of them in the meanwhile became not-active or remove their photos. Remove them is a tedious job.
+I'm removing also non reciprocal contacts, after giving them a reasonable amount of time.
 
 ### How to install
 copy the raw script into a new violentmonkey script
