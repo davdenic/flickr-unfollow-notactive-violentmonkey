@@ -15,10 +15,14 @@ After remove some contacts it refresh the page.
 If none to be removed is found it moves to next page.
 
 ### Criterias
-First it searches for contacts with 0 photos.
-Then for contacts where the last upload is older than 24 months.
-Then for contacts that does not follow you back and you added "months" or "ages" ago. 
+ - First it searches for contacts with 0 photos.
+ - Then for contacts where the last upload is older than 24 months.
+ - Then for contacts that does not follow you back and you added "months" or "ages" ago. 
 
 At the top of the script there are some variables you can configure.
 
 Note: Flickr uses dates like "54 months ago", "ages ago", "12 weeks ago", "2 days ago" so the search is based on the keywords "months", "ages".
+
+### Known bugs and issues
+ - Flickr pagination numbers does not update as the script proceed. As consequence at a certain point in the end of the process it will open a undefined url. 
+ - It may requires some hours to perform over a "thousands" of contacts account. I've been use it on 9k contacts for 1-2 hours, but since it does automatically I left it run for the time needed
